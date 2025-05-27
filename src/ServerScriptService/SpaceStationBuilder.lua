@@ -436,28 +436,25 @@ function SpaceStationBuilder:BuildSpaceStation()
 	self:CreateCorridor(compartments["StorageBay"], compartments["DockingBay"])
 	self:CreateCorridor(compartments["DockingBay"], compartments["Engineering"])
 	
-	-- Створюємо платформу для спавну в командному центрі
+	-- Створюємо місце для гравців в командному центрі
 	local spawnPlatform = Instance.new("Part")
-	spawnPlatform.Name = "SpawnPlatform"
+	spawnPlatform.Name = "CommandPlatform"
 	spawnPlatform.Position = compartments["CommandCenter"].Position + Vector3.new(0, -2, 0)
 	spawnPlatform.Size = Vector3.new(10, 1, 10)
 	spawnPlatform.Anchored = true
 	spawnPlatform.CanCollide = true
-	spawnPlatform.Transparency = 0.7
+	spawnPlatform.Transparency = 0.5
 	spawnPlatform.Material = Enum.Material.Neon
 	spawnPlatform.Color = Color3.fromRGB(0, 200, 255)
 	spawnPlatform.Parent = compartments["CommandCenter"]
 	
-	-- Створюємо точку спавну на платформі
-	local spawnLocation = Instance.new("SpawnLocation")
-	spawnLocation.Name = "PlayerSpawn"
-	spawnLocation.Position = spawnPlatform.Position + Vector3.new(0, 2, 0)
-	spawnLocation.Size = Vector3.new(6, 1, 6)
-	spawnLocation.Anchored = true
-	spawnLocation.CanCollide = false
-	spawnLocation.Transparency = 1 -- Робимо невидимою
-	spawnLocation.Neutral = true -- Дозволяємо спавн усім гравцям
-	spawnLocation.Parent = compartments["CommandCenter"]
+	-- Додаємо світловий ефект для платформи
+	local pointLight = Instance.new("PointLight")
+	pointLight.Name = "CommandLight"
+	pointLight.Color = Color3.fromRGB(0, 200, 255)
+	pointLight.Range = 15
+	pointLight.Brightness = 1
+	pointLight.Parent = spawnPlatform
 	
 	-- Додаємо зовнішню оболонку для візуальної изоляції станції
 	local outerShell = Instance.new("Part")
