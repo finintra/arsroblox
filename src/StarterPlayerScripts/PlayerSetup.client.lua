@@ -1,30 +1,47 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 -- Налаштування камери
 local function setupCamera()
-    local camera = workspace.CurrentCamera
-    camera.CameraType = Enum.CameraType.Scriptable
+    -- Встановлюємо стандартну камеру від першої особи
+    camera.CameraType = Enum.CameraType.Custom
     
-    -- Плавне слідкування камери за гравцем
-    RunService.RenderStepped:Connect(function()
-        if character and humanoid then
-            local head = character:FindFirstChild("Head")
-            if head then
-                camera.CFrame = CFrame.new(head.Position + Vector3.new(0, 2, -10), head.Position)
-            end
-        end
-    end)
+    -- Налаштовуємо відстань камери
+    local cameraOffset = Vector3.new(0, 2, -10)
+    
+    -- Оновлення позиції камери
+    local function updateCamera()
+        if not character or not humanoid or not humanoidRootPart then return end
+        
+        local targetCFrame = CFrame.new(humanoidRootPart.Position + Vector3.new(0, 3, 0))
+        camera.CFrame = CFrame.new(
+            targetCFrame.Position + cameraOffset,
+            targetCFrame.Position
+        )
+    end
+    
+    -- Запускаємо оновлення камери
+    RunService.RenderStepped:Connect(updateCamera)
 end
 
 -- Обробник появи персонажа
 local function onCharacterAdded(newCharacter)
     character = newCharacter
     humanoid = character:WaitForChild("Humanoid")
+    humanoid.WalkSpeed = 16 -- Звичайна швидкість ходьби
+    humanoid.JumpPower = 50 -- Сила стрибка
+    
+    -- Чекаємо, поки завантажиться HumanoidRootPart
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    
+    -- Налаштовуємо камеру
     setupCamera()
     
     -- Додавання ефекту спавну
@@ -46,7 +63,7 @@ local function onCharacterAdded(newCharacter)
         NumberSequenceKeypoint.new(0.8, 0.5),
         NumberSequenceKeypoint.new(1, 1)
     })
-    spawnEffect.Parent = character:WaitForChild("HumanoidRootPart")
+    spawnEffect.Parent = humanoidRootPart
     
     -- Видалення ефекту через 2 секунди
     delay(2, function()
@@ -55,8 +72,18 @@ local function onCharacterAdded(newCharacter)
     end)
 end
 
--- Підключення обробників
-player.CharacterAdded:Connect(onCharacterAdded)
-if character then
-    onCharacterAdded(character)
+-- Обробник помилок
+local function onError(message)
+    print("Player setup error:", message)
 end
+
+-- Ініціалізація
+xpcall(function()
+    -- Підключення обробників
+    player.CharacterAdded:Connect(onCharacterAdded)
+    
+    -- Якщо персонаж вже існує
+    if character then
+        onCharacterAdded(character)
+    end
+end, onError)
