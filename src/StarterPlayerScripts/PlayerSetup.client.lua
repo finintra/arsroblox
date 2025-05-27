@@ -1,55 +1,62 @@
--- PlayerSetup.client.lua
--- Клієнтський скрипт для налаштування гравця
-
 local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
--- Функція для налаштування камери гравця
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Налаштування камери
 local function setupCamera()
-	-- Налаштовуємо камеру на першу особу
-	local camera = workspace.CurrentCamera
-	camera.CameraType = Enum.CameraType.Custom
-	
-	print("Камеру налаштовано")
+    local camera = workspace.CurrentCamera
+    camera.CameraType = Enum.CameraType.Scriptable
+    
+    -- Плавне слідкування камери за гравцем
+    RunService.RenderStepped:Connect(function()
+        if character and humanoid then
+            local head = character:FindFirstChild("Head")
+            if head then
+                camera.CFrame = CFrame.new(head.Position + Vector3.new(0, 2, -10), head.Position)
+            end
+        end
+    end)
 end
 
--- Функція для налаштування гравця при респавні
-local function characterAdded(character)
-	print("Персонаж гравця завантажено")
-	
-	-- Надаємо невелику затримку для завантаження
-	task.wait(0.5)
-	
-	-- Налаштовуємо камеру
-	setupCamera()
-	
-	-- Перевіряємо, чи гравець знаходиться всередині станції
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-	if humanoidRootPart then
-		local position = humanoidRootPart.Position
-		
-		-- Перевіряємо позицію відносно космічної станції
-		local spaceStation = workspace:FindFirstChild("SpaceStation")
-		if spaceStation and spaceStation:FindFirstChild("CommandCenter") then
-			local commandCenter = spaceStation.CommandCenter
-			local distance = (position - commandCenter.Position).Magnitude
-			
-			-- Якщо гравець далеко від командного центру, показуємо повідомлення
-			if distance > 50 then
-				print("Ви знаходитесь не на космічній станції, очікуйте телепортації...")
-			else
-				print("Ви успішно з'явились на космічній станції")
-			end
-		end
-	end
+-- Обробник появи персонажа
+local function onCharacterAdded(newCharacter)
+    character = newCharacter
+    humanoid = character:WaitForChild("Humanoid")
+    setupCamera()
+    
+    -- Додавання ефекту спавну
+    local spawnEffect = Instance.new("ParticleEmitter")
+    spawnEffect.Texture = "rbxassetid://296874871"
+    spawnEffect.LightEmission = 1
+    spawnEffect.LightInfluence = 0
+    spawnEffect.Speed = NumberRange.new(5)
+    spawnEffect.Lifetime = NumberRange.new(1)
+    spawnEffect.Rate = 50
+    spawnEffect.RotSpeed = NumberRange.new(0, 180)
+    spawnEffect.Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.5),
+        NumberSequenceKeypoint.new(0.5, 1),
+        NumberSequenceKeypoint.new(1, 0)
+    })
+    spawnEffect.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(0.8, 0.5),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    spawnEffect.Parent = character:WaitForChild("HumanoidRootPart")
+    
+    -- Видалення ефекту через 2 секунди
+    delay(2, function()
+        spawnEffect.Enabled = false
+        spawnEffect:Destroy()
+    end)
 end
 
--- Підключаємо функцію до події появи персонажа
-localPlayer.CharacterAdded:Connect(characterAdded)
-
--- Викликаємо функцію для поточного персонажа, якщо він вже завантажений
-if localPlayer.Character then
-	characterAdded(localPlayer.Character)
+-- Підключення обробників
+player.CharacterAdded:Connect(onCharacterAdded)
+if character then
+    onCharacterAdded(character)
 end
-
-print("Клієнтський скрипт налаштування гравця ініціалізовано")

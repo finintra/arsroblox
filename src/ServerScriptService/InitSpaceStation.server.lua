@@ -1,23 +1,30 @@
--- InitSpaceStation.server.lua
--- Скрипт для ініціалізації космічної станції при запуску гри
-
--- Почекаємо поки всі сервіси будуть доступні
-game:GetService("RunService").Heartbeat:Wait()
-
-print("Почекаємо, поки завантажиться гра...")
-wait(2) -- Чекаємо 2 секунди для завантаження всіх компонентів
-
+local ServerScriptService = game:GetService("ServerScriptService")
 local SpaceStationBuilder = require(script.Parent.SpaceStationBuilder)
 
--- Ініціалізуємо станцію при завантаженні серверу
-print("Починаю будівництво космічної станції...")
+-- Ініціалізація станції
+local function initStation()
+    local builder = SpaceStationBuilder.new()
+    builder:Build()
+    
+    -- Вивід інформації про створення
+    print("Space station has been initialized!")
+    print("Created rooms: Laboratory, Server Room, Ventilation, Generator")
+    print("Spawn points: 8")
+end
 
-local success, result = pcall(function()
-    return SpaceStationBuilder:BuildSpaceStation()
+-- Запуск ініціалізації при старті гри
+game.Players.PlayerAdded:Connect(function(player)
+    if #game.Players:GetPlayers() == 1 then
+        -- Перевірка, чи станція вже існує
+        if not workspace:FindFirstChild("Laboratory_Floor") then
+            initStation()
+        end
+    end
 end)
 
-if success then
-    print("Космічну станцію збудовано успішно!")
-else
-    warn("Помилка при будівництві станції: " .. tostring(result))
+-- Якщо сервер вже запущений, перевірити чи потрібно ініціалізувати станцію
+if #game.Players:GetPlayers() > 0 then
+    if not workspace:FindFirstChild("Laboratory_Floor") then
+        initStation()
+    end
 end
