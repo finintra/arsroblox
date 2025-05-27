@@ -392,6 +392,13 @@ end
 
 -- Головна функція для створення всієї космічної станції
 function SpaceStationBuilder:BuildSpaceStation()
+	-- Перевіряємо чи існує вже космічна станція, якщо так - видаляємо
+	local existingStation = game.Workspace:FindFirstChild("SpaceStation")
+	if existingStation then
+		existingStation:Destroy()
+		print("Видалено існуючу космічну станцію")
+	end
+	
 	-- Створюємо батьківський об'єкт для станції
 	local spaceStation = Instance.new("Folder")
 	spaceStation.Name = "SpaceStation"

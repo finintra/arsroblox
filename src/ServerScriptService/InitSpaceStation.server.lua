@@ -1,14 +1,23 @@
 -- InitSpaceStation.server.lua
 -- Скрипт для ініціалізації космічної станції при запуску гри
 
+-- Почекаємо поки всі сервіси будуть доступні
+game:GetService("RunService").Heartbeat:Wait()
+
+print("Почекаємо, поки завантажиться гра...")
+wait(2) -- Чекаємо 2 секунди для завантаження всіх компонентів
+
 local SpaceStationBuilder = require(script.Parent.SpaceStationBuilder)
 
 -- Ініціалізуємо станцію при завантаженні серверу
-local function init()
-	print("Починаю будівництво космічної станції...")
-	SpaceStationBuilder:BuildSpaceStation()
-	print("Космічну станцію збудовано успішно!")
-end
+print("Починаю будівництво космічної станції...")
 
--- Запускаємо ініціалізацію
-init()
+local success, result = pcall(function()
+    return SpaceStationBuilder:BuildSpaceStation()
+end)
+
+if success then
+    print("Космічну станцію збудовано успішно!")
+else
+    warn("Помилка при будівництві станції: " .. tostring(result))
+end
