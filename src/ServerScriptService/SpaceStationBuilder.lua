@@ -436,16 +436,28 @@ function SpaceStationBuilder:BuildSpaceStation()
 	self:CreateCorridor(compartments["StorageBay"], compartments["DockingBay"])
 	self:CreateCorridor(compartments["DockingBay"], compartments["Engineering"])
 	
-	-- Створюємо точку спавну в командному центрі
+	-- Створюємо платформу для спавну в командному центрі
+	local spawnPlatform = Instance.new("Part")
+	spawnPlatform.Name = "SpawnPlatform"
+	spawnPlatform.Position = compartments["CommandCenter"].Position + Vector3.new(0, -2, 0)
+	spawnPlatform.Size = Vector3.new(10, 1, 10)
+	spawnPlatform.Anchored = true
+	spawnPlatform.CanCollide = true
+	spawnPlatform.Transparency = 0.7
+	spawnPlatform.Material = Enum.Material.Neon
+	spawnPlatform.Color = Color3.fromRGB(0, 200, 255)
+	spawnPlatform.Parent = compartments["CommandCenter"]
+	
+	-- Створюємо точку спавну на платформі
 	local spawnLocation = Instance.new("SpawnLocation")
 	spawnLocation.Name = "PlayerSpawn"
-	spawnLocation.Position = compartments["CommandCenter"].Position + Vector3.new(0, -3, 0)
+	spawnLocation.Position = spawnPlatform.Position + Vector3.new(0, 2, 0)
 	spawnLocation.Size = Vector3.new(6, 1, 6)
 	spawnLocation.Anchored = true
 	spawnLocation.CanCollide = false
 	spawnLocation.Transparency = 1 -- Робимо невидимою
 	spawnLocation.Neutral = true -- Дозволяємо спавн усім гравцям
-	spawnLocation.Parent = game.Workspace
+	spawnLocation.Parent = compartments["CommandCenter"]
 	
 	-- Додаємо зовнішню оболонку для візуальної изоляції станції
 	local outerShell = Instance.new("Part")
