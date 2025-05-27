@@ -1,0 +1,24 @@
+# Roblox Studio temp files
+*.rbxl.lock
+*.rbxm.lock
+
+# Rojo files
+sourcemap.json
+roblox.toml
+
+# VSCode files
+.vscode/
+*.code-workspace
+
+# Logs
+logs/
+*.log
+
+# Roblox place files (optional - if you're using Rojo)
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Generated files
+/build/
