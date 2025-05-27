@@ -125,7 +125,12 @@ function SpaceStationBuilder:CreateCorridor(compartment1, compartment2)
 	local direction = (pos2 - pos1).Unit
 	local distance = (pos2 - pos1).Magnitude
 	
-	local corridorLength = distance - (compartment1.Size.Magnitude + compartment2.Size.Magnitude) / 4
+	-- Коригуємо довжину коридору, щоб він точно з'єднував відсіки
+	local size1 = compartment1.Size / 2
+	local size2 = compartment2.Size / 2
+	
+	-- Розраховуємо розмір коридору
+	local corridorLength = distance - (math.abs(direction.X) * (size1.X + size2.X) + math.abs(direction.Z) * (size1.Z + size2.Z))
 	local corridorWidth = 5
 	local corridorHeight = 5
 	
@@ -134,6 +139,7 @@ function SpaceStationBuilder:CreateCorridor(compartment1, compartment2)
 	corridor.Anchored = true
 	corridor.Material = Enum.Material.Metal
 	corridor.Color = Color3.fromRGB(200, 200, 200)
+	corridor.Transparency = 0.2
 	
 	-- Визначення орієнтації коридору
 	local midPoint = pos1:Lerp(pos2, 0.5)
@@ -410,22 +416,51 @@ function SpaceStationBuilder:BuildSpaceStation()
 		compartments[config.name] = self:CreateCompartment(config)
 	end
 	
-	-- Створюємо переходи між відсіками (центральний до всіх)
+	-- Створюємо повну мережу коридорів між усіма відсіками
+	-- Спочатку командний центр з'єднуємо з усіма відсіками
 	local centerCompartment = compartments["CommandCenter"]
 	for name, compartment in pairs(compartments) do
 		if name ~= "CommandCenter" then
 			self:CreateCorridor(centerCompartment, compartment)
 		end
 	end
-	
-	-- Додаткові коридори між суміжними відсіками
+
+	-- З'єднуємо всі відсіки між собою в більш логічній послідовності
 	self:CreateCorridor(compartments["LivingQuarters"], compartments["MedicalBay"])
+	self:CreateCorridor(compartments["LivingQuarters"], compartments["Hydroponics"])
 	self:CreateCorridor(compartments["ResearchLab"], compartments["Engineering"])
+	self:CreateCorridor(compartments["ResearchLab"], compartments["MedicalBay"])
 	self:CreateCorridor(compartments["PowerGenerator"], compartments["Engineering"])
+	self:CreateCorridor(compartments["PowerGenerator"], compartments["StorageBay"])
 	self:CreateCorridor(compartments["StorageBay"], compartments["Hydroponics"])
-	self:CreateCorridor(compartments["DockingBay"], compartments["StorageBay"])
+	self:CreateCorridor(compartments["StorageBay"], compartments["DockingBay"])
+	self:CreateCorridor(compartments["DockingBay"], compartments["Engineering"])
 	
-	print("Космічну станцію збудовано!")
+	-- Створюємо точку спавну в командному центрі
+	local spawnLocation = Instance.new("SpawnLocation")
+	spawnLocation.Name = "PlayerSpawn"
+	spawnLocation.Position = compartments["CommandCenter"].Position + Vector3.new(0, -3, 0)
+	spawnLocation.Size = Vector3.new(6, 1, 6)
+	spawnLocation.Anchored = true
+	spawnLocation.CanCollide = false
+	spawnLocation.Transparency = 1 -- Робимо невидимою
+	spawnLocation.Neutral = true -- Дозволяємо спавн усім гравцям
+	spawnLocation.Parent = game.Workspace
+	
+	-- Додаємо зовнішню оболонку для візуальної изоляції станції
+	local outerShell = Instance.new("Part")
+	outerShell.Name = "OuterShell"
+	outerShell.Position = Vector3.new(0, 20, 0) -- Центр станції
+	outerShell.Size = Vector3.new(150, 80, 150) -- Достатньо велика, щоб охопити всю станцію
+	outerShell.Anchored = true
+	outerShell.CanCollide = true
+	outerShell.Transparency = 0.85 -- Майже прозора, але видима
+	outerShell.Material = Enum.Material.ForceField
+	outerShell.Color = Color3.fromRGB(0, 100, 255) -- Синя
+	outerShell.Shape = Enum.PartType.Ball -- Сферична форма
+	outerShell.Parent = game.Workspace.SpaceStation
+	
+	print("Космічну станцію збудовано успішно!")
 	return spaceStation
 end
 
