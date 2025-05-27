@@ -122,41 +122,71 @@ function SpaceStationBuilder:CreateCorridor(compartment1, compartment2)
 	local pos1 = compartment1.Position
 	local pos2 = compartment2.Position
 	
-	local direction = (pos2 - pos1).Unit
-	local distance = (pos2 - pos1).Magnitude
+	-- Визначаємо напрямок та відстань між відсіками
+	local direction = (pos2 - pos1)
+	local directionUnit = direction.Unit
+	local distance = direction.Magnitude
 	
-	-- Коригуємо довжину коридору, щоб він точно з'єднував відсіки
+	-- Обчислюємо фактичні розміри відсіків для правильного з'єднання
 	local size1 = compartment1.Size / 2
 	local size2 = compartment2.Size / 2
 	
-	-- Розраховуємо розмір коридору
-	local corridorLength = distance - (math.abs(direction.X) * (size1.X + size2.X) + math.abs(direction.Z) * (size1.Z + size2.Z))
+	-- Основні параметри коридору
 	local corridorWidth = 5
 	local corridorHeight = 5
 	
-	local corridor = Instance.new("Part")
-	corridor.Name = "Corridor_" .. compartment1.Name .. "_to_" .. compartment2.Name
-	corridor.Anchored = true
-	corridor.Material = Enum.Material.Metal
-	corridor.Color = Color3.fromRGB(200, 200, 200)
-	corridor.Transparency = 0.2
+	-- Визначаємо чи коридор йде вздовж X чи Z
+	local isXAligned = math.abs(direction.X) > math.abs(direction.Z)
 	
-	-- Визначення орієнтації коридору
-	local midPoint = pos1:Lerp(pos2, 0.5)
-	corridor.Position = midPoint
-	
-	-- Якщо коридор прямує по осі X
-	if math.abs(direction.X) > math.abs(direction.Z) then
+	-- Обчислюємо стартову та кінцеву точки коридору
+	local startPoint, endPoint
+	if isXAligned then
+		-- Коридор по осі X
+		local sign1 = direction.X > 0 and 1 or -1
+		local sign2 = direction.X > 0 and -1 or 1
+		
+		startPoint = pos1 + Vector3.new(sign1 * size1.X, 0, 0)
+		endPoint = pos2 + Vector3.new(sign2 * size2.X, 0, 0)
+		
+		-- Розмір коридору з урахуванням офсетів
+		local corridorLength = (endPoint - startPoint).Magnitude
+		
+		-- Створюємо коридор
+		local corridor = Instance.new("Part")
+		corridor.Name = "Corridor_" .. compartment1.Name .. "_to_" .. compartment2.Name
 		corridor.Size = Vector3.new(corridorLength, corridorHeight, corridorWidth)
-		corridor.CFrame = CFrame.new(midPoint, midPoint + Vector3.new(direction.X, 0, 0))
-	else -- Якщо коридор прямує по осі Z
+		corridor.CFrame = CFrame.new(startPoint:Lerp(endPoint, 0.5), endPoint)
+		corridor.Anchored = true
+		corridor.Material = Enum.Material.Metal
+		corridor.Color = Color3.fromRGB(200, 200, 200)
+		corridor.Transparency = 0.2
+		corridor.Parent = game.Workspace.SpaceStation
+		
+		return corridor
+	else
+		-- Коридор по осі Z
+		local sign1 = direction.Z > 0 and 1 or -1
+		local sign2 = direction.Z > 0 and -1 or 1
+		
+		startPoint = pos1 + Vector3.new(0, 0, sign1 * size1.Z)
+		endPoint = pos2 + Vector3.new(0, 0, sign2 * size2.Z)
+		
+		-- Розмір коридору з урахуванням офсетів
+		local corridorLength = (endPoint - startPoint).Magnitude
+		
+		-- Створюємо коридор
+		local corridor = Instance.new("Part")
+		corridor.Name = "Corridor_" .. compartment1.Name .. "_to_" .. compartment2.Name
 		corridor.Size = Vector3.new(corridorWidth, corridorHeight, corridorLength)
-		corridor.CFrame = CFrame.new(midPoint, midPoint + Vector3.new(0, 0, direction.Z))
+		corridor.CFrame = CFrame.new(startPoint:Lerp(endPoint, 0.5), endPoint)
+		corridor.Anchored = true
+		corridor.Material = Enum.Material.Metal
+		corridor.Color = Color3.fromRGB(200, 200, 200)
+		corridor.Transparency = 0.2
+		corridor.Parent = game.Workspace.SpaceStation
+		
+		return corridor
 	end
-	
-	corridor.Parent = game.Workspace.SpaceStation
-	
-	return corridor
 end
 
 -- Функція додавання спеціалізованого інтер'єру
